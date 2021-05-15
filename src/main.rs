@@ -30,7 +30,7 @@ impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.channel_id.to_string() == self.internal_channel_id {
             let re = Regex::new(
-                r"^(http[s]?://[www\.]?|ftp://[www\.]?|www\.){1}([0-9A-Za-z-\.@:%_\+~#=]+)+((\.[a-zA-Z]{2,3})+)(/(.)*)?(\\?(.)*)?",
+                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
             );
             match re {
                 Ok(re) => {
