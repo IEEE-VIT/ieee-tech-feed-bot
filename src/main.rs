@@ -1,7 +1,7 @@
 use dotenv::dotenv;
 use std::env;
 
-use regex::Regex;
+use regex::RegexBuilder;
 // use url::Url;
 
 use serenity::{
@@ -17,11 +17,11 @@ struct Handler {
 }
 
 impl Handler {
-    fn new(internal_channel_id: String,  techloop_channel_id: String) -> Handler {
+    fn new(internal_channel_id: String, techloop_channel_id: String) -> Handler {
         return Handler {
             internal_channel_id,
-            techloop_channel_id
-        }
+            techloop_channel_id,
+        };
     }
 }
 
@@ -29,16 +29,29 @@ impl Handler {
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.channel_id.to_string() == self.internal_channel_id {
-            let re = Regex::new(
-                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
-            );
-            match re {
+            let re_send = RegexBuilder::new(r"!send").build();
+            match re_send {
+                Ok(re) => {
+                    if re.is_match(&msg.content) {
+                        println!("Not sending message: {}", &msg.content);
+                        return;
+                    }
+                }
+                Err(err) => {
+                    println!("{:?}", err);
+                }
+            }
+
+            let re_url = RegexBuilder::new(
+                r"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+            ).build();
+            match re_url {
                 Ok(re) => {
                     for mat in re.find_iter(&msg.content) {
                         let url = msg.content[mat.start()..mat.end()].to_string();
                         println!("{:?}", url);
                         let id = match self.techloop_channel_id.parse::<u64>() {
-                            Ok(i) =>i,
+                            Ok(i) => i,
                             Err(_e) => return,
                         };
 
@@ -68,7 +81,6 @@ impl EventHandler for Handler {
         println!("{} is connected!", data_about_bot.user.name);
     }
 }
-
 #[tokio::main]
 async fn main() {
     dotenv().ok();
